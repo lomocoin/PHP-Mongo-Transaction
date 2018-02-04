@@ -27,7 +27,6 @@ class StateChangeLogRepository
 
     public function save(StateChangeLog $log)
     {
-        // TODO: use $push
         $collection = (new Client)->test->php_mongo_transaction_state_change_log;
 
         $doc = $collection->findOne(
@@ -60,6 +59,7 @@ class StateChangeLogRepository
     }
 
     /**
+     * // TODO: potential memory issue, should use $pull or $each
      * @return StateChangeLog[]
      */
     public function readAll()

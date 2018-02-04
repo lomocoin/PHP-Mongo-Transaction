@@ -7,6 +7,7 @@ use MongoDB\Client;
 use MongoDB\Collection;
 
 // TODO: allow config the database collection
+// TODO: should allow clean(no longer needed) and check(errors?) transaction logs by cron
 class Transaction
 {
     /**
@@ -39,6 +40,7 @@ class Transaction
     }
 
     /**
+     * // TODO: support $options
      * @param Collection $collection
      * @param array $document
      *
@@ -64,6 +66,7 @@ class Transaction
     }
 
     /**
+     * // TODO: support $options
      * @param Collection $collection
      * @param array $filter
      * @param array $update
@@ -90,6 +93,7 @@ class Transaction
         return $updateResult;
     }
 
+    // TODO: support $options
     public function deleteOne(Collection $collection, array $filter)
     {
         $log = new StateChangeLog(
@@ -140,6 +144,9 @@ class Transaction
 
     public function rollback()
     {
+        // TODO: check the state, should not allow rollback on 'init' and 'commit' state.
+
+        // TODO: might be performance issue if too many logs, try to refactor use $each or $pull
         $logs = array_reverse($this->logRepo->readAll());
         foreach ($logs as $log) {
             $this->rollbackOne($log);
