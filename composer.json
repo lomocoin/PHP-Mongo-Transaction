@@ -1,0 +1,19 @@
+{
+  "name": "PHP-Mongo-Transaction",
+  "description": "PHP-Mongo-Transaction",
+  "keywords": [
+    "PHP",
+    "Mongo",
+    "Transaction"
+  ],
+  "license": "MIT",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "PHP_Mongo_Transaction\\": "PHP-Mongo-Transaction/"
+    }
+  },
+  "require": {
+    "mongodb/mongodb": "^1.2"
+  }
+}
