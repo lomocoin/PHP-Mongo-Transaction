@@ -9,9 +9,9 @@ use MongoDB\Model\BSONDocument;
 // TODO: to be MongoDB\BSON\Persistable
 class StateChangeLog
 {
-    const TYPE_INSERT = 'insert';
-    const TYPE_UPDATE = 'update';
-    const TYPE_DELETE = 'delete';
+    const TYPE_INSERT_ONE = 'insert_one';
+    const TYPE_UPDATE_ONE = 'update_one';
+    const TYPE_DELETE_ONE = 'delete_one';
 
     /**
      * @var string
@@ -95,22 +95,22 @@ class StateChangeLog
     }
 
     /**
-     * @param BSONDocument $stateAfter
+     * @param BSONDocument|null $stateAfter
      */
     public function setStateAfter($stateAfter)
     {
-        if ($this->type === self::TYPE_DELETE) {
+        if ($this->type === self::TYPE_DELETE_ONE) {
             return;
         }
         $this->stateAfter = $stateAfter;
     }
 
     /**
-     * @param BSONDocument $stateBefore
+     * @param BSONDocument|null $stateBefore
      */
     public function setStateBefore($stateBefore)
     {
-        if ($this->type === self::TYPE_INSERT) {
+        if ($this->type === self::TYPE_INSERT_ONE) {
             return;
         }
         $this->stateBefore = $stateBefore;

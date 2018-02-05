@@ -29,7 +29,13 @@ function printLine($str)
 printLine('Raw state');
 print_r($collection->find()->toArray());
 
-$transaction = Transaction::begin();
+$config = new \PHP_Mongo_Transaction\TransactionConfig(
+    new \MongoDB\Client(),
+    'test',
+    'php_mongo_transaction_transaction',
+    'php_mongo_transaction_state_change_log');
+
+$transaction = Transaction::begin($config);
 
 // -- insert
 $transaction->insertOne($collection, [
