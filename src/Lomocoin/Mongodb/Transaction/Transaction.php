@@ -1,9 +1,9 @@
 <?php
 
-namespace Lomocodin\Mongodb\Transaction;
+namespace Lomocoin\Mongodb\Transaction;
 
-use Lomocodin\Mongodb\Config\TransactionConfig;
-use Lomocodin\Mongodb\Exception\CannotRollbackException;
+use Lomocoin\Mongodb\Config\TransactionConfig;
+use Lomocoin\Mongodb\Exception\CannotRollbackException;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\Model\BSONDocument;
