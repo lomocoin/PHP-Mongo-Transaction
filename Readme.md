@@ -1,56 +1,47 @@
+## PHP-Mongo-Transaction
+
+## Install
+
+```bash
+composer require ........
+```
+
 ## Usage
 
+
+#### 1、Require `autoload.php` file
+
 ```php
-<?php
+require __DIR__ . '/vendor/autoload.php';
+```
 
-require_once __DIR__ . '/vendor/autoload.php';
+#### 2、Create transaction object
 
-use PHP_Mongo_Transaction\Transaction;
-
-// TODO: phpunit
-
-$collection = (new MongoDB\Client)->test->users;
-$collection->drop();
-
-$collection->insertOne([
-    'username' => 'A',
-    'email'    => 'a@example.com',
-    'name'     => 'AA',
-]);
-
-$collection->insertOne([
-    'username' => 'B',
-    'email'    => 'b@example.com',
-    'name'     => 'BB',
-]);
-
-function printLine($str)
-{
-    echo date('Y-m-d H:i:s') . ' | ' . $str, "\n";
-}
-
-printLine('Raw state');
-print_r($collection->find()->toArray());
-
+```php
 $config = new \PHP_Mongo_Transaction\TransactionConfig(
     new \MongoDB\Client(),
     'test',
     'php_mongo_transaction_transaction',
     'php_mongo_transaction_state_change_log');
-
+    
 $transaction = Transaction::begin($config);
+```
 
-// -- insert
+#### 3、Rollback
+
+###### 3.1 insert
+
+```php
 $transaction->insertOne($collection, [
-    'username' => 'C',
-    'email'    => 'c@example.com',
-    'name'     => 'CC',
+    'username' => 'B',
+    'email'    => 'b@example.com',
+    'name'     => 'BB',
 ]);
+```
 
-printLine('After insert state');
-print_r($collection->find()->toArray());
+###### 3.2 update
 
-// --- update
+```php
 $transaction->updateOne($collection, [
     'username' => 'B',
 ], [
@@ -58,17 +49,19 @@ $transaction->updateOne($collection, [
         'name' => 'BBB',
     ],
 ]);
-printLine('After update state');
-print_r($collection->find()->toArray());
-
-// -- delete
-$transaction->deleteOne($collection, [
-    'username' => 'B',
-]);
-printLine('After delete state');
-print_r($collection->find()->toArray());
-
-$transaction->rollback();
-printLine('Rollback state');
-print_r($collection->find()->toArray());
 ```
+
+###### 3.3 rollback
+
+```php
+$transaction->rollback();
+```
+
+## Contributors
+
+[Shenghan Chen](https://github.com/zzdjk6) | 
+[viest](https://github.com/viest)
+
+## License
+
+Apache License 2.0

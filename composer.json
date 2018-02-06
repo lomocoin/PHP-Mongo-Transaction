@@ -1,19 +1,27 @@
 {
-  "name": "PHP-Mongo-Transaction",
-  "description": "PHP-Mongo-Transaction",
+  "name": "PHP-Mongodb-Transaction",
+  "description": "PHP-Mongodb-Transaction",
+  "authors": [
+    {"name": "Shenghan Chen", "email": "zzdjk6@gmail.com"},
+    {"name": "viest", "email": "dev@service.viest.me"}
+  ],
   "keywords": [
     "PHP",
-    "Mongo",
+    "Mongodb",
     "Transaction"
   ],
   "license": "MIT",
   "type": "project",
   "autoload": {
     "psr-4": {
-      "PHP_Mongo_Transaction\\": "PHP-Mongo-Transaction/"
+      "Lomocoin\\Mongodb\\": "src/Lomocoin/Mongodb/"
     }
   },
+  "autoload-dev": {
+    "psr-4": { "Lomocoin\\Mongodb\\Tests\\": "tests/" }
+  },
   "require": {
-    "mongodb/mongodb": "^1.2"
+    "mongodb/mongodb": "^1.2",
+    "phpunit/phpunit": "^6.5"
   }
 }

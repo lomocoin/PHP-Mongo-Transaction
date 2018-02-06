@@ -1,11 +1,10 @@
 <?php
 
-
-namespace PHP_Mongo_Transaction;
-
+namespace Lomocoin\Mongodb\Transaction;
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\Model\BSONDocument;
+use Lomocoin\Mongodb\Config\TransactionConfig;
 
 class StateChangeLogRepository
 {

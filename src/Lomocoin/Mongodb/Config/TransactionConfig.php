@@ -1,6 +1,6 @@
 <?php
 
-namespace PHP_Mongo_Transaction;
+namespace Lomocoin\Mongodb\Config;
 
 use MongoDB\Client;
 
@@ -39,7 +39,8 @@ class TransactionConfig
         string $databaseName,
         string $transactionCollectionName,
         string $stageChangeLogCollectionName
-    ) {
+    )
+    {
         $this->mongoDBClient                = $mongoDBClient;
         $this->databaseName                 = $databaseName;
         $this->transactionCollectionName    = $transactionCollectionName;
@@ -49,9 +50,10 @@ class TransactionConfig
     /**
      * @return \MongoDB\Collection
      */
-    public function getTransactionCollection() {
-        $client = $this->getMongoDBClient();
-        $databaseName = $this->getDatabaseName();
+    public function getTransactionCollection()
+    {
+        $client         = $this->getMongoDBClient();
+        $databaseName   = $this->getDatabaseName();
         $collectionName = $this->getTransactionCollectionName();
         return $client->$databaseName->$collectionName;
     }
@@ -59,9 +61,10 @@ class TransactionConfig
     /**
      * @return \MongoDB\Collection
      */
-    public function getStageChangeLogCollection() {
-        $client = $this->getMongoDBClient();
-        $databaseName = $this->getDatabaseName();
+    public function getStageChangeLogCollection()
+    {
+        $client         = $this->getMongoDBClient();
+        $databaseName   = $this->getDatabaseName();
         $collectionName = $this->getStageChangeLogCollectionName();
         return $client->$databaseName->$collectionName;
     }

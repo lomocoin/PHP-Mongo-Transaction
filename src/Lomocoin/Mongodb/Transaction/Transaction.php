@@ -1,7 +1,9 @@
 <?php
 
-namespace PHP_Mongo_Transaction;
+namespace Lomocoin\Mongodb\Transaction;
 
+use Lomocoin\Mongodb\Config\TransactionConfig;
+use Lomocoin\Mongodb\Exception\CannotRollbackException;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\Model\BSONDocument;
@@ -15,7 +17,9 @@ class Transaction
     private $objectId;
 
     /**
-     * @var TransactionConfig
+     * transaction config
+     *
+     * @var $config
      */
     private $config;
 
@@ -46,9 +50,9 @@ class Transaction
 
     /**
      *
-     * @param Collection $collection
+     * @param Collection   $collection
      * @param array|object $document
-     * @param array $options
+     * @param array        $options
      *
      * @return \MongoDB\InsertOneResult
      * @throws \MongoDB\Exception\UnsupportedException
@@ -78,10 +82,10 @@ class Transaction
 
     /**
      *
-     * @param Collection $collection
+     * @param Collection   $collection
      * @param array|object $filter
      * @param array|object $update
-     * @param array $options
+     * @param array        $options
      *
      * @return \MongoDB\UpdateResult
      * @throws \MongoDB\Exception\UnsupportedException
@@ -114,9 +118,9 @@ class Transaction
     }
 
     /**
-     * @param Collection $collection
+     * @param Collection   $collection
      * @param array|object $filter
-     * @param array $options
+     * @param array        $options
      *
      * @return \MongoDB\DeleteResult
      * @throws \MongoDB\Exception\UnsupportedException

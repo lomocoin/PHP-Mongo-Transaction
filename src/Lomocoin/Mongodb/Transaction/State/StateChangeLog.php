@@ -1,8 +1,6 @@
 <?php
 
-
-namespace PHP_Mongo_Transaction;
-
+namespace Lomocoin\Mongodb\Transaction;
 
 use MongoDB\Model\BSONDocument;
 
