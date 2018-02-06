@@ -1,7 +1,6 @@
 <?php
 
-
-namespace PHP_Mongo_Transaction;
+namespace Lomocodin\Mongodb\Exception;
 
 class CannotRollbackException extends \Exception
 {

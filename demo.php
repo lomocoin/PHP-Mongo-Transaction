@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use PHP_Mongo_Transaction\Transaction;
+use \Lomocodin\Mongodb\Transaction\Transaction;
 
 // TODO: phpunit
 
@@ -29,7 +29,7 @@ function printLine($str)
 printLine('Raw state');
 print_r($collection->find()->toArray());
 
-$config = new \PHP_Mongo_Transaction\TransactionConfig(
+$config = new \Lomocodin\Mongodb\Config\TransactionConfig(
     new \MongoDB\Client(),
     'test',
     'php_mongo_transaction_transaction',

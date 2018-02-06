@@ -1,6 +1,6 @@
 <?php
 
-namespace PHP_Mongo_Transaction;
+namespace Lomocodin\Mongodb\Config;
 
 use MongoDB\Client;
 
