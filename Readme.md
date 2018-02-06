@@ -59,7 +59,7 @@ $transaction->rollback();
 
 ## Contributors
 
-[Shenghan Chen](https://github.com/zzdjk6)
+[Shenghan Chen](https://github.com/zzdjk6) | 
 [viest](https://github.com/viest)
 
 ## License
