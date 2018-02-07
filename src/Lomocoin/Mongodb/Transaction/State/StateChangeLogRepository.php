@@ -54,28 +54,22 @@ class StateChangeLogRepository
             );
         }
 
-        // TODO: should use MongoDB\BSON\Persistable
         $result = $collection->updateOne([
             'transaction_id' => $this->transactionId,
         ], [
-            '$push' =>
-                [
-                    'logs' => [
-                        'database_name'   => $log->getDatabaseName(),
-                        'collection_name' => $log->getCollectionName(),
-                        'type'            => $log->getType(),
-                        'state_before'    => $log->getStateBefore(),
-                        'state_after'     => $log->getStateAfter(),
-                    ],
-                ],
+            '$push' => [
+                'logs' => $log,
+            ],
         ]);
 
         return $result;
     }
 
     /**
-     * // TODO: potential memory issue, should use $pull or $each
+     * readAll
+     *
      * @return StateChangeLog[]
+     *
      * @throws \MongoDB\Exception\UnsupportedException
      * @throws \MongoDB\Exception\InvalidArgumentException
      * @throws \MongoDB\Driver\Exception\RuntimeException
@@ -89,13 +83,13 @@ class StateChangeLogRepository
         $logs = [];
         /** @var BSONDocument[] $arr */
         foreach ($arr as $item) {
-            // TODO: should use MongoDB\BSON\Persistable
             $log = new StateChangeLog(
-                $item['database_name'],
-                $item['collection_name'],
-                $item['type']);
-            $log->setStateBefore($item['state_before']);
-            $log->setStateAfter($item['state_after']);
+                $item->getDatabaseName(),
+                $item->getCollectionName(),
+                $item->getType());
+
+            $log->setStateBefore($item->getStateBefore());
+            $log->setStateAfter($item->getStateAfter());
             $logs[] = $log;
         }
 

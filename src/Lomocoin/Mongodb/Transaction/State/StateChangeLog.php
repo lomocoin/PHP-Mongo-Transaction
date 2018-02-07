@@ -3,10 +3,13 @@
 namespace Lomocoin\Mongodb\Transaction;
 
 use MongoDB\Model\BSONDocument;
+use MongoDB\BSON\Persistable;
+use Lomocoin\Mongodb\Traits\Transistor;
 
-// TODO: to be MongoDB\BSON\Persistable
-class StateChangeLog
+class StateChangeLog implements Persistable
 {
+    use Transistor;
+
     const TYPE_INSERT_ONE = 'insert_one';
     const TYPE_UPDATE_ONE = 'update_one';
     const TYPE_DELETE_ONE = 'delete_one';
@@ -45,9 +48,11 @@ class StateChangeLog
      */
     public function __construct(string $databaseName, string $collectionName, string $type)
     {
-        $this->databaseName   = $databaseName;
-        $this->collectionName = $collectionName;
-        $this->type           = $type;
+        $this->bsonUnserialize([
+            'databaseName'   => $databaseName,
+            'collectionName' => $collectionName,
+            'type'           => $type,
+        ]);
     }
 
     /**
@@ -100,6 +105,7 @@ class StateChangeLog
         if ($this->type === self::TYPE_DELETE_ONE) {
             return;
         }
+
         $this->stateAfter = $stateAfter;
     }
 
@@ -111,6 +117,7 @@ class StateChangeLog
         if ($this->type === self::TYPE_INSERT_ONE) {
             return;
         }
+
         $this->stateBefore = $stateBefore;
     }
 }
