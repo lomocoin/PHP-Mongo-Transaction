@@ -7,6 +7,7 @@ use Lomocoin\Mongodb\Exception\CannotCommitException;
 use Lomocoin\Mongodb\Exception\CannotRollbackException;
 use Lomocoin\Mongodb\Tests\TestCase;
 use Lomocoin\Mongodb\Transaction\Transaction;
+use Lomocoin\Mongodb\Transaction\TransactionLog;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 
@@ -78,7 +79,7 @@ class InsertTest extends TestCase
             ->getTransactionCollection()
             ->findOne(['_id' => $transaction->getObjectId()]);
 
-        $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
         $transaction->insertOne(self::$testCollection, [
             'username' => 'A',
@@ -90,7 +91,7 @@ class InsertTest extends TestCase
             ->getTransactionCollection()
             ->findOne(['_id' => $transaction->getObjectId()]);
 
-        $this->assertEquals(Transaction::STATE_ONGOING, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_ONGOING, $transactionDocument['state']);
 
         /** @noinspection PhpUnhandledExceptionInspection */
         $transaction->commit();
@@ -99,7 +100,7 @@ class InsertTest extends TestCase
             ->getTransactionCollection()
             ->findOne(['_id' => $transaction->getObjectId()]);
 
-        $this->assertEquals(Transaction::STATE_COMMIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_COMMIT, $transactionDocument['state']);
 
         $this->expectException(CannotRollbackException::class);
         /** @noinspection PhpUnhandledExceptionInspection */
@@ -117,7 +118,7 @@ class InsertTest extends TestCase
             ->getTransactionCollection()
             ->findOne(['_id' => $transaction->getObjectId()]);
 
-        $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
         $transaction->insertOne(self::$testCollection, [
             'username' => 'A',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomocoin\Mongodb\Transaction\State;
+namespace Lomocoin\Mongodb\Transaction;
 
 use Lomocoin\Mongodb\Config\TransactionConfig;
 use MongoDB\BSON\ObjectId;

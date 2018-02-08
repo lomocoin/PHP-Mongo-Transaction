@@ -5,13 +5,10 @@ namespace Lomocoin\Mongodb\Transaction;
 use Lomocoin\Mongodb\Config\TransactionConfig;
 use Lomocoin\Mongodb\Exception\CannotCommitException;
 use Lomocoin\Mongodb\Exception\CannotRollbackException;
-use Lomocoin\Mongodb\Transaction\State\StateChangeLog;
-use Lomocoin\Mongodb\Transaction\State\StateChangeLogRepository;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\Model\BSONDocument;
 
-// TODO: should add a timestamp to allow clean(no longer needed) and check(errors?) transaction logs by cron
 class Transaction
 {
     /**
@@ -20,21 +17,19 @@ class Transaction
     private $objectId;
 
     /**
-     * transaction config
-     *
-     * @var $config
+     * @var TransactionConfig
      */
     private $config;
 
     /**
-     * @var StateChangeLog
+     * @var StateChangeLogRepository
      */
-    private $logRepo;
+    private $stateChangeLogRepo;
 
-    const STATE_INIT     = 'init';
-    const STATE_ONGOING  = 'ongoing';
-    const STATE_COMMIT   = 'commit';
-    const STATE_ROLLBACK = 'rollback';
+    /**
+     * @var TransactionLogRepository
+     */
+    private $transactionLogRepo;
 
     /**
      * @return mixed
@@ -46,9 +41,28 @@ class Transaction
 
     private function __construct(ObjectId $uuid, TransactionConfig $config)
     {
-        $this->objectId = $uuid;
-        $this->config   = $config;
-        $this->logRepo  = new StateChangeLogRepository($uuid, $config);
+        $this->objectId           = $uuid;
+        $this->config             = $config;
+        $this->stateChangeLogRepo = new StateChangeLogRepository($uuid, $config);
+        $this->transactionLogRepo = new TransactionLogRepository($config);
+    }
+
+    /**
+     * @param TransactionConfig $config
+     *
+     * @return Transaction
+     * @throws \MongoDB\Exception\BadMethodCallException
+     * @throws \MongoDB\Driver\Exception\InvalidArgumentException
+     * @throws \MongoDB\Exception\InvalidArgumentException
+     * @throws \MongoDB\Driver\Exception\RuntimeException
+     */
+    public static function begin(TransactionConfig $config)
+    {
+        $transactionLogRepo = new TransactionLogRepository($config);
+        $transactionLog     = $transactionLogRepo->create();
+        $id                 = $transactionLog->getId();
+
+        return new self($id, $config);
     }
 
     /**
@@ -66,7 +80,7 @@ class Transaction
     {
         // execute insert operation
         $insertResult = $collection->insertOne($document, $options);
-        $this->updateStateAfterTransactionBegin();
+        $this->transactionLogRepo->markOngoing($this->objectId);
 
         // log the after state
         $log = new StateChangeLog(
@@ -78,7 +92,7 @@ class Transaction
         $stateAfter = $collection->findOne(['_id' => $objectId]);
         /** @var BSONDocument $stateAfter */
         $log->setStateAfter($stateAfter);
-        $this->logRepo->save($log);
+        $this->stateChangeLogRepo->save($log);
 
         return $insertResult;
     }
@@ -109,13 +123,13 @@ class Transaction
 
         // execute update operation
         $updateResult = $collection->updateOne($filter, $update, $options);
-        $this->updateStateAfterTransactionBegin();
+        $this->transactionLogRepo->markOngoing($this->objectId);
 
         // log the after state
         $stateAfter = $collection->findOne($filter);
         /** @var BSONDocument $stateAfter */
         $log->setStateAfter($stateAfter);
-        $this->logRepo->save($log);
+        $this->stateChangeLogRepo->save($log);
 
         return $updateResult;
     }
@@ -141,37 +155,13 @@ class Transaction
         $stateBefore = $collection->findOne($filter);
         /** @var BSONDocument $stateBefore */
         $log->setStateBefore($stateBefore);
-        $this->logRepo->save($log);
+        $this->stateChangeLogRepo->save($log);
 
         // execute delete operation
         $deleteResult = $collection->deleteOne($filter, $options);
-        $this->updateStateAfterTransactionBegin();
+        $this->transactionLogRepo->markOngoing($this->objectId);
 
         return $deleteResult;
-    }
-
-    /**
-     * @param TransactionConfig $config
-     *
-     * @return Transaction
-     * @throws \MongoDB\Exception\BadMethodCallException
-     * @throws \MongoDB\Driver\Exception\InvalidArgumentException
-     * @throws \MongoDB\Exception\InvalidArgumentException
-     * @throws \MongoDB\Driver\Exception\RuntimeException
-     */
-    public static function begin(TransactionConfig $config)
-    {
-        $insertOneResult = $config
-            ->getTransactionCollection()
-            ->insertOne([
-                'state'      => self::STATE_INIT,
-                'created_at' => time(),
-                'updated_at' => time(),
-            ]);
-
-        $id = $insertOneResult->getInsertedId();
-
-        return new self($id, $config);
     }
 
     /**
@@ -184,21 +174,11 @@ class Transaction
     public function commit()
     {
         // check the state
-        $transactionDocument = $this->config->getTransactionCollection()->findOne(['_id' => $this->objectId]);
-        if ($transactionDocument['state'] !== self::STATE_ONGOING) {
+        if ($this->transactionLogRepo->canCommit($this->objectId) === false) {
             throw new CannotCommitException('The transaction state is not valid');
         }
 
-        $this->config
-            ->getTransactionCollection()
-            ->updateOne([
-                '_id' => $this->objectId,
-            ], [
-                '$set' => [
-                    'state'      => self::STATE_COMMIT,
-                    'updated_at' => time(),
-                ],
-            ]);
+        $this->transactionLogRepo->markCommit($this->objectId);
     }
 
     /**
@@ -210,47 +190,16 @@ class Transaction
      */
     public function rollback()
     {
-        // check the state
-        $transactionDocument = $this->config->getTransactionCollection()->findOne(['_id' => $this->objectId]);
-        if ($transactionDocument['state'] !== self::STATE_ONGOING) {
+        if ($this->transactionLogRepo->canRollback($this->objectId) === false) {
             throw new CannotRollbackException('The transaction state is not valid');
         }
 
         // rollback log 1 by 1
-        while ($log = $this->logRepo->read()) {
+        while ($log = $this->stateChangeLogRepo->read()) {
             $this->rollbackOne($log);
         }
 
-        // mark the state of transaction
-        $this->config
-            ->getTransactionCollection()
-            ->updateOne([
-                '_id' => $this->objectId,
-            ], [
-                '$set' => [
-                    'state' => self::STATE_ROLLBACK,
-                ],
-            ]);
-    }
-
-    /**
-     *
-     * @throws \MongoDB\Exception\UnsupportedException
-     * @throws \MongoDB\Exception\InvalidArgumentException
-     * @throws \MongoDB\Driver\Exception\RuntimeException
-     */
-    private function updateStateAfterTransactionBegin()
-    {
-        $this->config
-            ->getTransactionCollection()
-            ->updateOne([
-                '_id' => $this->objectId,
-            ], [
-                '$set' => [
-                    'state'      => self::STATE_ONGOING,
-                    'updated_at' => time(),
-                ],
-            ]);
+        $this->transactionLogRepo->markRollback($this->objectId);
     }
 
     /**
