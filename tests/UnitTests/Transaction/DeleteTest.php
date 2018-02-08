@@ -1,6 +1,8 @@
 <?php
 
+
 namespace Lomocoin\Mongodb\Tests\UnitTests\Transaction;
+
 
 use Lomocoin\Mongodb\Config\TransactionConfig;
 use Lomocoin\Mongodb\Exception\CannotCommitException;
@@ -10,10 +12,7 @@ use Lomocoin\Mongodb\Transaction\Transaction;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 
-// TODO: unit test for combination operations rollback
-// TODO: unit test for rollback all
-
-class InsertTest extends TestCase
+class DeleteTest extends TestCase
 {
     /**
      * @var TransactionConfig
@@ -24,6 +23,12 @@ class InsertTest extends TestCase
      * @var Collection
      */
     private static $testCollection;
+
+    /**
+     * @var ObjectId
+     */
+    private $objectId;
+
 
     public static function setUpBeforeClass()
     {
@@ -40,6 +45,15 @@ class InsertTest extends TestCase
     {
         parent::setUp();
         self::$testCollection->drop();
+
+        // use mongo directly to build fixture
+        $insertResult = self::$testCollection->insertOne([
+            'username' => 'A',
+            'email'    => 'a@example.com',
+            'name'     => 'AA',
+        ]);
+
+        $this->objectId = $insertResult->getInsertedId();
     }
 
     protected function tearDown()
@@ -49,31 +63,23 @@ class InsertTest extends TestCase
         parent::tearDown();
     }
 
-    public function testInsertOneOnly()
+    public function testDeleteOneOnly()
     {
         $transaction = Transaction::begin(self::$config);
 
-        $insertResult = $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
+        $deleteResult = $transaction->deleteOne(self::$testCollection, [
+            '_id' => $this->objectId
         ]);
 
-        $this->assertEquals(1, $insertResult->getInsertedCount());
-
-        $objectId = $insertResult->getInsertedId();
-        $this->assertInstanceOf(ObjectId::class, $objectId);
-
-        $object = self::$testCollection->findOne(['_id' => $objectId]);
-        $this->assertEquals('A', $object['username']);
-        $this->assertEquals('a@example.com', $object['email']);
-        $this->assertEquals('AA', $object['name']);
+        $this->assertEquals(1, $deleteResult->getDeletedCount());
+        $this->assertEquals(0, self::$testCollection->count());
     }
 
+
     /**
-     * @depends testInsertOneOnly
+     * @depends testDeleteOneOnly
      */
-    public function testInsertOneThenCommit()
+    public function testDeleteOneThenCommit()
     {
         $transaction = Transaction::begin(self::$config);
 
@@ -83,11 +89,7 @@ class InsertTest extends TestCase
 
         $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
 
-        $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
-        ]);
+        $transaction->deleteOne(self::$testCollection, ['_id' => $this->objectId]);
 
         $transactionDocument = self::$config
             ->getTransactionCollection()
@@ -110,9 +112,9 @@ class InsertTest extends TestCase
     }
 
     /**
-     * @depends testInsertOneThenCommit
+     * @depends testDeleteOneThenCommit
      */
-    public function testInsertOneThenRollback()
+    public function testDeleteOneThenRollback()
     {
         $transaction = Transaction::begin(self::$config);
 
@@ -122,13 +124,9 @@ class InsertTest extends TestCase
 
         $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
 
-        $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
-        ]);
+        $transaction->deleteOne(self::$testCollection, ['_id' => $this->objectId]);
 
-        $this->assertEquals(1, self::$testCollection->count());
+        $this->assertEquals(0, self::$testCollection->count());
 
         try {
             $transaction->rollback();
@@ -136,7 +134,12 @@ class InsertTest extends TestCase
             $this->fail($e->getMessage());
         }
 
-        $this->assertEquals(0, self::$testCollection->count());
+        $this->assertEquals(1, self::$testCollection->count());
+
+        $object = self::$testCollection->findOne(['_id' => $this->objectId]);
+        $this->assertEquals('A', $object['username']);
+        $this->assertEquals('a@example.com', $object['email']);
+        $this->assertEquals('AA', $object['name']);
 
         $this->expectException(CannotCommitException::class);
         /** @noinspection PhpUnhandledExceptionInspection */

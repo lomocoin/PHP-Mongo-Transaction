@@ -25,6 +25,8 @@
 
         <testsuite name="Unit Test Suite">
             <file>./tests/UnitTests/Transaction/InsertTest.php</file>
+            <file>./tests/UnitTests/Transaction/UpdateTest.php</file>
+            <file>./tests/UnitTests/Transaction/DeleteTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>

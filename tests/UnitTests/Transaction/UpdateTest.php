@@ -1,6 +1,8 @@
 <?php
 
+
 namespace Lomocoin\Mongodb\Tests\UnitTests\Transaction;
+
 
 use Lomocoin\Mongodb\Config\TransactionConfig;
 use Lomocoin\Mongodb\Exception\CannotCommitException;
@@ -10,10 +12,7 @@ use Lomocoin\Mongodb\Transaction\Transaction;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 
-// TODO: unit test for combination operations rollback
-// TODO: unit test for rollback all
-
-class InsertTest extends TestCase
+class UpdateTest extends TestCase
 {
     /**
      * @var TransactionConfig
@@ -24,6 +23,11 @@ class InsertTest extends TestCase
      * @var Collection
      */
     private static $testCollection;
+
+    /**
+     * @var ObjectId
+     */
+    private $objectId;
 
     public static function setUpBeforeClass()
     {
@@ -40,6 +44,15 @@ class InsertTest extends TestCase
     {
         parent::setUp();
         self::$testCollection->drop();
+
+        // use mongo directly to build fixture
+        $insertResult = self::$testCollection->insertOne([
+            'username' => 'A',
+            'email'    => 'a@example.com',
+            'name'     => 'AA',
+        ]);
+
+        $this->objectId = $insertResult->getInsertedId();
     }
 
     protected function tearDown()
@@ -49,31 +62,35 @@ class InsertTest extends TestCase
         parent::tearDown();
     }
 
-    public function testInsertOneOnly()
+    public function testUpdateOneOnly()
     {
+        // use transaction
         $transaction = Transaction::begin(self::$config);
 
-        $insertResult = $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
-        ]);
+        $updateResult = $transaction->updateOne(
+            self::$testCollection,
+            [
+                '_id' => $this->objectId,
+            ],
+            [
+                '$set' => [
+                    'name' => 'BB',
+                ],
+            ]);
 
-        $this->assertEquals(1, $insertResult->getInsertedCount());
+        $this->assertEquals(1, $updateResult->getMatchedCount());
+        $this->assertEquals(1, $updateResult->getModifiedCount());
 
-        $objectId = $insertResult->getInsertedId();
-        $this->assertInstanceOf(ObjectId::class, $objectId);
-
-        $object = self::$testCollection->findOne(['_id' => $objectId]);
+        $object = self::$testCollection->findOne(['_id' => $this->objectId]);
         $this->assertEquals('A', $object['username']);
         $this->assertEquals('a@example.com', $object['email']);
-        $this->assertEquals('AA', $object['name']);
+        $this->assertEquals('BB', $object['name']);
     }
 
     /**
-     * @depends testInsertOneOnly
+     * @depends testUpdateOneOnly
      */
-    public function testInsertOneThenCommit()
+    public function testUpdateOneThenCommit()
     {
         $transaction = Transaction::begin(self::$config);
 
@@ -83,11 +100,16 @@ class InsertTest extends TestCase
 
         $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
 
-        $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
-        ]);
+        $transaction->updateOne(
+            self::$testCollection,
+            [
+                '_id' => $this->objectId,
+            ],
+            [
+                '$set' => [
+                    'name' => 'BB',
+                ],
+            ]);
 
         $transactionDocument = self::$config
             ->getTransactionCollection()
@@ -110,9 +132,9 @@ class InsertTest extends TestCase
     }
 
     /**
-     * @depends testInsertOneThenCommit
+     * @depends testUpdateOneThenCommit
      */
-    public function testInsertOneThenRollback()
+    public function testUpdateOneThenRollback()
     {
         $transaction = Transaction::begin(self::$config);
 
@@ -122,11 +144,16 @@ class InsertTest extends TestCase
 
         $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
 
-        $transaction->insertOne(self::$testCollection, [
-            'username' => 'A',
-            'email'    => 'a@example.com',
-            'name'     => 'AA',
-        ]);
+        $transaction->updateOne(
+            self::$testCollection,
+            [
+                '_id' => $this->objectId,
+            ],
+            [
+                '$set' => [
+                    'name' => 'BB',
+                ],
+            ]);
 
         $this->assertEquals(1, self::$testCollection->count());
 
@@ -136,7 +163,14 @@ class InsertTest extends TestCase
             $this->fail($e->getMessage());
         }
 
-        $this->assertEquals(0, self::$testCollection->count());
+        $this->assertEquals(1, self::$testCollection->count());
+
+        $object = self::$testCollection->findOne(
+            [
+                '_id' => $this->objectId,
+            ]
+        );
+        $this->assertEquals('AA', $object['name']);
 
         $this->expectException(CannotCommitException::class);
         /** @noinspection PhpUnhandledExceptionInspection */
