@@ -199,6 +199,7 @@ class Transaction
     }
 
     /**
+     * @throws \MongoDB\Exception\UnexpectedValueException
      * @throws \MongoDB\Exception\UnsupportedException
      * @throws \MongoDB\Exception\InvalidArgumentException
      * @throws \MongoDB\Driver\Exception\RuntimeException
@@ -212,9 +213,8 @@ class Transaction
             throw new CannotRollbackException('The transaction state is not valid');
         }
 
-        // read all logs, reverse the order, then apply rollback 1 by 1
-        $logs = array_reverse($this->logRepo->readAll());
-        foreach ($logs as $log) {
+        // rollback log 1 by 1
+        while ($log = $this->logRepo->read()) {
             $this->rollbackOne($log);
         }
 
