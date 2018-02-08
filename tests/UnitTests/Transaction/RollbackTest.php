@@ -45,7 +45,7 @@ class RollbackTest extends TestCase
 
     public function testRollbackAll()
     {
-        // baisc fixture
+        // basic fixture
         $objectIdA = self::$testCollection
             ->insertOne([
                 'username' => 'A',
@@ -65,7 +65,7 @@ class RollbackTest extends TestCase
             ])
             ->getInsertedId();
 
-        $objectIdC = $transaction
+        $transaction
             ->insertOne(self::$testCollection, [
                 'username' => 'C',
                 'email'    => 'c@example.com',

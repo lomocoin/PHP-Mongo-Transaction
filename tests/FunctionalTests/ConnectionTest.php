@@ -12,7 +12,7 @@ class ConnectionTest extends TestCase
         $config = null;
 
         try {
-            $config = $this->getBasicConfig();
+            $config = static::getBasicConfig();
         } catch (\Exception $exception) {
             $this->fail($exception->getMessage());
         }
