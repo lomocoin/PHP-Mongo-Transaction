@@ -19,11 +19,15 @@
     </php>
 
     <testsuites>
-        <testsuite name="MongoDB CRUD Test Suite">
-            <file>./tests/BaseTest.php</file>
-            <file>./tests/Transaction/InsertTest.php</file>
-            <file>./tests/Transaction/UpdateTest.php</file>
-            <file>./tests/Transaction/DeleteTest.php</file>
+        <testsuite name="Functional Test Suite">
+            <file>./tests/FunctionalTests/ConnectionTest.php</file>
+        </testsuite>
+
+        <testsuite name="Unit Test Suite">
+            <file>./tests/UnitTests/Transaction/InsertTest.php</file>
+            <file>./tests/UnitTests/Transaction/UpdateTest.php</file>
+            <file>./tests/UnitTests/Transaction/DeleteTest.php</file>
+            <file>./tests/UnitTests/Transaction/RollbackTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>

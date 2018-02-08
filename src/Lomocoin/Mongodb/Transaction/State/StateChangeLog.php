@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomocoin\Mongodb\Transaction;
+namespace Lomocoin\Mongodb\Transaction\State;
 
 use MongoDB\Model\BSONDocument;
 use MongoDB\BSON\Persistable;
