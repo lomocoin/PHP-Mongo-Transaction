@@ -2,17 +2,20 @@
 
 namespace Lomocoin\Mongodb\Transaction\State;
 
-use MongoDB\Model\BSONDocument;
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Persistable;
-use Lomocoin\Mongodb\Traits\Transistor;
+use MongoDB\Model\BSONDocument;
 
 class StateChangeLog implements Persistable
 {
-    use Transistor;
-
     const TYPE_INSERT_ONE = 'insert_one';
     const TYPE_UPDATE_ONE = 'update_one';
     const TYPE_DELETE_ONE = 'delete_one';
+
+    /**
+     * @var ObjectId
+     */
+    private $id;
 
     /**
      * @var string
@@ -48,11 +51,11 @@ class StateChangeLog implements Persistable
      */
     public function __construct(string $databaseName, string $collectionName, string $type)
     {
-        $this->bsonUnserialize([
-            'databaseName'   => $databaseName,
-            'collectionName' => $collectionName,
-            'type'           => $type,
-        ]);
+        /** @noinspection ExceptionsAnnotatingAndHandlingInspection */
+        $this->id             = new ObjectId;
+        $this->databaseName   = $databaseName;
+        $this->collectionName = $collectionName;
+        $this->type           = $type;
     }
 
     /**
@@ -70,7 +73,6 @@ class StateChangeLog implements Persistable
     {
         return $this->collectionName;
     }
-
 
     /**
      * @return string
@@ -119,5 +121,43 @@ class StateChangeLog implements Persistable
         }
 
         $this->stateBefore = $stateBefore;
+    }
+
+    /**
+     * Provides an array or document to serialize as BSON
+     * Called during serialization of the object to BSON. The method must return an array or stdClass.
+     * Root documents (e.g. a MongoDB\BSON\Serializable passed to MongoDB\BSON\fromPHP()) will always be serialized as a BSON document.
+     * For field values, associative arrays and stdClass instances will be serialized as a BSON document and sequential arrays (i.e. sequential, numeric indexes starting at 0) will be serialized as a BSON array.
+     * @link http://php.net/manual/en/mongodb-bson-serializable.bsonserialize.php
+     * @return array|object An array or stdClass to be serialized as a BSON array or document.
+     */
+    public function bsonSerialize()
+    {
+        return [
+            '_id'             => $this->id,
+            'database_name'   => $this->databaseName,
+            'collection_name' => $this->collectionName,
+            'type'            => $this->type,
+            'state_before'    => $this->stateBefore,
+            'state_after'     => $this->stateAfter,
+        ];
+    }
+
+    /**
+     * Constructs the object from a BSON array or document
+     * Called during unserialization of the object from BSON.
+     * The properties of the BSON array or document will be passed to the method as an array.
+     * @link http://php.net/manual/en/mongodb-bson-unserializable.bsonunserialize.php
+     *
+     * @param array $data Properties within the BSON array or document.
+     */
+    public function bsonUnserialize(array $data)
+    {
+        $this->id             = $data['_id'];
+        $this->databaseName   = $data['database_name'];
+        $this->collectionName = $data['collection_name'];
+        $this->type           = $data['type'];
+        $this->stateBefore    = $data['state_before'];
+        $this->stateAfter     = $data['state_after'];
     }
 }

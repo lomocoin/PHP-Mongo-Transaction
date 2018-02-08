@@ -2,9 +2,9 @@
 
 namespace Lomocoin\Mongodb\Transaction\State;
 
-use MongoDB\BSON\ObjectId;
-use MongoDB\Model\BSONDocument;
 use Lomocoin\Mongodb\Config\TransactionConfig;
+use MongoDB\BSON\ObjectId;
+use MongoDB\Model\BSONArray;
 
 class StateChangeLogRepository
 {
@@ -67,8 +67,7 @@ class StateChangeLogRepository
     }
 
     /**
-     * readAll
-     *
+     * @todo Replace this method with generator for better control and memory issue
      * @return StateChangeLog[]
      *
      * @throws \MongoDB\Exception\UnsupportedException
@@ -77,23 +76,13 @@ class StateChangeLogRepository
      */
     public function readAll()
     {
-        $arr = $this->config->getStageChangeLogCollection()->findOne([
-            'transaction_id' => $this->transactionId,
-        ])['logs'];
-
-        $logs = [];
-        /** @var BSONDocument[] $arr */
-        foreach ($arr as $item) {
-            $log = new StateChangeLog(
-                $item->getDatabaseName(),
-                $item->getCollectionName(),
-                $item->getType());
-
-            $log->setStateBefore($item->getStateBefore());
-            $log->setStateAfter($item->getStateAfter());
-            $logs[] = $log;
-        }
-
+        /* @var $arr BSONArray */
+        $arr = $this->config
+                    ->getStageChangeLogCollection()
+                    ->findOne([
+                        'transaction_id' => $this->transactionId,
+                    ])['logs'];
+        $logs = $arr->getArrayCopy();
         return $logs;
     }
 }
