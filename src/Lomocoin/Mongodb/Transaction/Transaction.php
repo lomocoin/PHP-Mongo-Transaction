@@ -144,7 +144,7 @@ class Transaction
         $this->logRepo->save($log);
 
         // execute delete operation
-        $deleteResult = $collection->deleteOne($filter);
+        $deleteResult = $collection->deleteOne($filter, $options);
         $this->updateStateAfterTransactionBegin();
 
         return $deleteResult;
