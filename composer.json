@@ -1,27 +1,37 @@
 {
-  "name": "PHP-Mongodb-Transaction",
-  "description": "PHP-Mongodb-Transaction",
-  "authors": [
-    {"name": "Shenghan Chen", "email": "zzdjk6@gmail.com"},
-    {"name": "viest", "email": "dev@service.viest.me"}
+  "name"        : "PHP-Mongodb-Transaction",
+  "description" : "PHP-Mongodb-Transaction",
+  "authors"     : [
+    {
+      "name" : "Shenghan Chen",
+      "email": "zzdjk6@gmail.com"
+    },
+    {
+      "name" : "viest",
+      "email": "dev@service.viest.me"
+    }
   ],
-  "keywords": [
+  "keywords"    : [
     "PHP",
     "Mongodb",
     "Transaction"
   ],
-  "license": "MIT",
-  "type": "project",
-  "autoload": {
+  "license"     : "MIT",
+  "type"        : "project",
+  "autoload"    : {
     "psr-4": {
       "Lomocoin\\Mongodb\\": "src/Lomocoin/Mongodb/"
     }
   },
   "autoload-dev": {
-    "psr-4": { "Lomocoin\\Mongodb\\Tests\\": "tests/" }
+    "psr-4": {
+      "Lomocoin\\Mongodb\\Tests\\": "tests/"
+    }
   },
-  "require": {
-    "mongodb/mongodb": "^1.2",
+  "require"     : {
+    "mongodb/mongodb": "^1.2"
+  },
+  "require-dev" : {
     "phpunit/phpunit": "^6.5"
   }
 }
