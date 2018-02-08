@@ -89,14 +89,14 @@ class RollbackTest extends TestCase
         $this->assertEquals(2, self::$testCollection->count());
 
         $objectA = self::$testCollection->findOne(['_id' => $objectIdA]);
-        self::assertEquals('A', $objectA['username']);
-        self::assertEquals('a@example.com', $objectA['email']);
-        self::assertEquals('AA', $objectA['name']);
+        $this->assertEquals('A', $objectA['username']);
+        $this->assertEquals('a@example.com', $objectA['email']);
+        $this->assertEquals('AA', $objectA['name']);
 
         $objectB = self::$testCollection->findOne(['_id' => $objectIdB]);
-        self::assertEquals('B', $objectB['username']);
-        self::assertEquals('b@example.com', $objectB['email']);
-        self::assertEquals('BBB', $objectB['name']);
+        $this->assertEquals('B', $objectB['username']);
+        $this->assertEquals('b@example.com', $objectB['email']);
+        $this->assertEquals('BBB', $objectB['name']);
 
         /** @noinspection PhpUnhandledExceptionInspection */
         $transaction->rollback();
@@ -104,8 +104,8 @@ class RollbackTest extends TestCase
         $this->assertEquals(1, self::$testCollection->count());
 
         $objectA = self::$testCollection->findOne(['_id' => $objectIdA]);
-        self::assertEquals('A', $objectA['username']);
-        self::assertEquals('a@example.com', $objectA['email']);
-        self::assertEquals('AA', $objectA['name']);
+        $this->assertEquals('A', $objectA['username']);
+        $this->assertEquals('a@example.com', $objectA['email']);
+        $this->assertEquals('AA', $objectA['name']);
     }
 }

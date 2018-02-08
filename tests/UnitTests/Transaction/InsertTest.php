@@ -10,9 +10,6 @@ use Lomocoin\Mongodb\Transaction\Transaction;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 
-// TODO: unit test for combination operations rollback
-// TODO: unit test for rollback all
-
 class InsertTest extends TestCase
 {
     /**
