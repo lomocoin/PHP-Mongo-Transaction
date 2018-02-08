@@ -3,7 +3,10 @@
 namespace Lomocoin\Mongodb\Transaction;
 
 use Lomocoin\Mongodb\Config\TransactionConfig;
+use Lomocoin\Mongodb\Exception\CannotCommitException;
 use Lomocoin\Mongodb\Exception\CannotRollbackException;
+use Lomocoin\Mongodb\Transaction\State\StateChangeLog;
+use Lomocoin\Mongodb\Transaction\State\StateChangeLogRepository;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\Model\BSONDocument;
@@ -50,9 +53,9 @@ class Transaction
 
     /**
      *
-     * @param Collection   $collection
+     * @param Collection $collection
      * @param array|object $document
-     * @param array        $options
+     * @param array $options
      *
      * @return \MongoDB\InsertOneResult
      * @throws \MongoDB\Exception\UnsupportedException
@@ -82,10 +85,10 @@ class Transaction
 
     /**
      *
-     * @param Collection   $collection
+     * @param Collection $collection
      * @param array|object $filter
      * @param array|object $update
-     * @param array        $options
+     * @param array $options
      *
      * @return \MongoDB\UpdateResult
      * @throws \MongoDB\Exception\UnsupportedException
@@ -118,9 +121,9 @@ class Transaction
     }
 
     /**
-     * @param Collection   $collection
+     * @param Collection $collection
      * @param array|object $filter
-     * @param array        $options
+     * @param array $options
      *
      * @return \MongoDB\DeleteResult
      * @throws \MongoDB\Exception\UnsupportedException
@@ -174,9 +177,16 @@ class Transaction
      * @throws \MongoDB\Exception\UnsupportedException
      * @throws \MongoDB\Exception\InvalidArgumentException
      * @throws \MongoDB\Driver\Exception\RuntimeException
+     * @throws CannotCommitException
      */
     public function commit()
     {
+        // check the state
+        $transactionDocument = $this->config->getTransactionCollection()->findOne(['_id' => $this->objectId]);
+        if ($transactionDocument['state'] !== self::STATE_ONGOING) {
+            throw new CannotCommitException('The transaction state is not valid');
+        }
+
         $this->config
             ->getTransactionCollection()
             ->updateOne([

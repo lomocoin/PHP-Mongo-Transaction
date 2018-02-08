@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomocoin\Mongodb\Transaction;
+namespace Lomocoin\Mongodb\Transaction\State;
 
 use MongoDB\BSON\ObjectId;
 use MongoDB\Model\BSONDocument;
@@ -22,6 +22,7 @@ class StateChangeLogRepository
      * StateChangeLogRepository constructor.
      *
      * @param ObjectId $transactionId
+     * @param TransactionConfig $config
      */
     public function __construct(ObjectId $transactionId, TransactionConfig $config)
     {
