@@ -164,7 +164,9 @@ class Transaction
         $insertOneResult = $config
             ->getTransactionCollection()
             ->insertOne([
-                'state' => self::STATE_INIT,
+                'state'      => self::STATE_INIT,
+                'created_at' => time(),
+                'updated_at' => time(),
             ]);
 
         $id = $insertOneResult->getInsertedId();
@@ -193,7 +195,8 @@ class Transaction
                 '_id' => $this->objectId,
             ], [
                 '$set' => [
-                    'state' => self::STATE_COMMIT,
+                    'state'      => self::STATE_COMMIT,
+                    'updated_at' => time(),
                 ],
             ]);
     }
@@ -244,7 +247,8 @@ class Transaction
                 '_id' => $this->objectId,
             ], [
                 '$set' => [
-                    'state' => self::STATE_ONGOING,
+                    'state'      => self::STATE_ONGOING,
+                    'updated_at' => time(),
                 ],
             ]);
     }
