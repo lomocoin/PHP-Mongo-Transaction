@@ -35,7 +35,7 @@ class TestCase extends BaseTestCase
      */
     public static function getMongoTransactionCollection()
     {
-        return getenv('MONGODB_COLLECTION') ?: 'lomocoin_mongodb_test_transaction';
+        return getenv('MONGODB_COLLECTION') ?: 'lomocoin_mongodb_test_transaction_log';
     }
 
     /**

@@ -43,7 +43,7 @@ class InsertTest extends TestCase
     protected function tearDown()
     {
         self::$config->getStageChangeLogCollection()->drop();
-        self::$config->getTransactionCollection()->drop();
+        self::$config->getTransactionLogCollection()->drop();
         parent::tearDown();
     }
 
@@ -76,8 +76,8 @@ class InsertTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
@@ -88,8 +88,8 @@ class InsertTest extends TestCase
         ]);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_ONGOING, $transactionDocument['state']);
 
@@ -97,8 +97,8 @@ class InsertTest extends TestCase
         $transaction->commit();
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_COMMIT, $transactionDocument['state']);
 
@@ -115,8 +115,8 @@ class InsertTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 

@@ -32,7 +32,7 @@ class TransactionLogRepository
     public function create()
     {
         $log = new TransactionLog();
-        $this->config->getTransactionCollection()->insertOne($log);
+        $this->config->getTransactionLogCollection()->insertOne($log);
 
         return $log;
     }
@@ -47,7 +47,7 @@ class TransactionLogRepository
     public function markOngoing(ObjectId $id)
     {
         $this->config
-            ->getTransactionCollection()
+            ->getTransactionLogCollection()
             ->updateOne([
                 '_id' => $id,
             ], [
@@ -68,7 +68,7 @@ class TransactionLogRepository
     public function markCommit(ObjectId $id)
     {
         $this->config
-            ->getTransactionCollection()
+            ->getTransactionLogCollection()
             ->updateOne([
                 '_id' => $id,
             ], [
@@ -89,7 +89,7 @@ class TransactionLogRepository
     public function markRollback(ObjectId $id)
     {
         $this->config
-            ->getTransactionCollection()
+            ->getTransactionLogCollection()
             ->updateOne([
                 '_id' => $id,
             ], [
@@ -111,9 +111,18 @@ class TransactionLogRepository
      */
     public function canCommit(ObjectId $id)
     {
-        $transactionDocument = $this->config->getTransactionCollection()->findOne(['_id' => $id]);
+        $log = $this->fetchTransactionLog($id);
+        if ($log === null) {
+            return false;
+        }
+        $validState = [
+            TransactionLog::STATE_INIT,
+            TransactionLog::STATE_ONGOING,
+        ];
 
-        return $transactionDocument['state'] === TransactionLog::STATE_INIT || $transactionDocument['state'] === TransactionLog::STATE_ONGOING;
+        $state = $log->getState();
+
+        return \in_array($state, $validState, true);
     }
 
     /**
@@ -127,8 +136,33 @@ class TransactionLogRepository
      */
     public function canRollback(ObjectId $id)
     {
-        $transactionDocument = $this->config->getTransactionCollection()->findOne(['_id' => $id]);
+        $log = $this->fetchTransactionLog($id);
+        if ($log === null) {
+            return false;
+        }
+        $validState = [
+            TransactionLog::STATE_INIT,
+            TransactionLog::STATE_ONGOING,
+        ];
 
-        return $transactionDocument['state'] === TransactionLog::STATE_INIT || $transactionDocument['state'] === TransactionLog::STATE_ONGOING;
+        $state = $log->getState();
+
+        return \in_array($state, $validState, true);
+    }
+
+    /**
+     * @param ObjectId $id
+     *
+     * @return TransactionLog|null
+     * @throws \MongoDB\Exception\UnsupportedException
+     * @throws \MongoDB\Exception\InvalidArgumentException
+     * @throws \MongoDB\Driver\Exception\RuntimeException
+     */
+    public function fetchTransactionLog(ObjectId $id)
+    {
+        /* @var $log TransactionLog|null */
+        $log = $this->config->getTransactionLogCollection()->findOne(['_id' => $id]);
+
+        return $log;
     }
 }

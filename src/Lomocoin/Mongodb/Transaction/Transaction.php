@@ -14,7 +14,7 @@ class Transaction
     /**
      * @var ObjectId
      */
-    private $objectId;
+    private $transactionId;
 
     /**
      * @var TransactionConfig
@@ -31,17 +31,9 @@ class Transaction
      */
     private $transactionLogRepo;
 
-    /**
-     * @return mixed
-     */
-    public function getObjectId()
-    {
-        return $this->objectId;
-    }
-
     private function __construct(ObjectId $uuid, TransactionConfig $config)
     {
-        $this->objectId           = $uuid;
+        $this->transactionId      = $uuid;
         $this->config             = $config;
         $this->stateChangeLogRepo = new StateChangeLogRepository($uuid, $config);
         $this->transactionLogRepo = new TransactionLogRepository($config);
@@ -66,6 +58,14 @@ class Transaction
     }
 
     /**
+     * @return ObjectId
+     */
+    public function getTransactionId()
+    {
+        return $this->transactionId;
+    }
+
+    /**
      *
      * @param Collection $collection
      * @param array|object $document
@@ -80,7 +80,7 @@ class Transaction
     {
         // execute insert operation
         $insertResult = $collection->insertOne($document, $options);
-        $this->transactionLogRepo->markOngoing($this->objectId);
+        $this->transactionLogRepo->markOngoing($this->transactionId);
 
         // log the after state
         $log = new StateChangeLog(
@@ -123,7 +123,7 @@ class Transaction
 
         // execute update operation
         $updateResult = $collection->updateOne($filter, $update, $options);
-        $this->transactionLogRepo->markOngoing($this->objectId);
+        $this->transactionLogRepo->markOngoing($this->transactionId);
 
         // log the after state
         $stateAfter = $collection->findOne($filter);
@@ -159,7 +159,7 @@ class Transaction
 
         // execute delete operation
         $deleteResult = $collection->deleteOne($filter, $options);
-        $this->transactionLogRepo->markOngoing($this->objectId);
+        $this->transactionLogRepo->markOngoing($this->transactionId);
 
         return $deleteResult;
     }
@@ -174,11 +174,11 @@ class Transaction
     public function commit()
     {
         // check the state
-        if ($this->transactionLogRepo->canCommit($this->objectId) === false) {
+        if ($this->transactionLogRepo->canCommit($this->transactionId) === false) {
             throw new CannotCommitException('The transaction state is not valid');
         }
 
-        $this->transactionLogRepo->markCommit($this->objectId);
+        $this->transactionLogRepo->markCommit($this->transactionId);
     }
 
     /**
@@ -190,7 +190,7 @@ class Transaction
      */
     public function rollback()
     {
-        if ($this->transactionLogRepo->canRollback($this->objectId) === false) {
+        if ($this->transactionLogRepo->canRollback($this->transactionId) === false) {
             throw new CannotRollbackException('The transaction state is not valid');
         }
 
@@ -199,7 +199,7 @@ class Transaction
             $this->rollbackOne($log);
         }
 
-        $this->transactionLogRepo->markRollback($this->objectId);
+        $this->transactionLogRepo->markRollback($this->transactionId);
     }
 
     /**

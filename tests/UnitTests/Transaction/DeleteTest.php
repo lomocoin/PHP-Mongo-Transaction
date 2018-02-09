@@ -60,7 +60,7 @@ class DeleteTest extends TestCase
     protected function tearDown()
     {
         self::$config->getStageChangeLogCollection()->drop();
-        self::$config->getTransactionCollection()->drop();
+        self::$config->getTransactionLogCollection()->drop();
         parent::tearDown();
     }
 
@@ -85,16 +85,16 @@ class DeleteTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
         $transaction->deleteOne(self::$testCollection, ['_id' => $this->objectId]);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_ONGOING, $transactionDocument['state']);
 
@@ -102,8 +102,8 @@ class DeleteTest extends TestCase
         $transaction->commit();
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_COMMIT, $transactionDocument['state']);
 
@@ -120,8 +120,8 @@ class DeleteTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
         $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 

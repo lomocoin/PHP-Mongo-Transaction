@@ -39,7 +39,7 @@ class RollbackTest extends TestCase
     protected function tearDown()
     {
         self::$config->getStageChangeLogCollection()->drop();
-        self::$config->getTransactionCollection()->drop();
+        self::$config->getTransactionLogCollection()->drop();
         parent::tearDown();
     }
 
