@@ -1,10 +1,10 @@
 <?php
 
-namespace Lomocoin\Mongodb\Transaction\State;
+namespace Lomocoin\Mongodb\Transaction;
 
-use MongoDB\BSON\ObjectId;
-use MongoDB\Model\BSONDocument;
 use Lomocoin\Mongodb\Config\TransactionConfig;
+use MongoDB\BSON\ObjectId;
+use MongoDB\Driver\Cursor;
 
 class StateChangeLogRepository
 {
@@ -50,7 +50,8 @@ class StateChangeLogRepository
             $collection->insertOne(
                 [
                     'transaction_id' => $this->transactionId,
-                    'logs'           => [],
+                    'operation_logs' => [],
+                    'rollback_logs'  => [],
                 ]
             );
         }
@@ -59,7 +60,7 @@ class StateChangeLogRepository
             'transaction_id' => $this->transactionId,
         ], [
             '$push' => [
-                'logs' => $log,
+                'operation_logs' => $log,
             ],
         ]);
 
@@ -67,33 +68,51 @@ class StateChangeLogRepository
     }
 
     /**
-     * readAll
-     *
-     * @return StateChangeLog[]
-     *
+     * @return StateChangeLog|null
      * @throws \MongoDB\Exception\UnsupportedException
+     * @throws \MongoDB\Exception\UnexpectedValueException
      * @throws \MongoDB\Exception\InvalidArgumentException
      * @throws \MongoDB\Driver\Exception\RuntimeException
      */
-    public function readAll()
+    public function read()
     {
-        $arr = $this->config->getStageChangeLogCollection()->findOne([
-            'transaction_id' => $this->transactionId,
-        ])['logs'];
+        $collection = $this->config->getStageChangeLogCollection();
 
-        $logs = [];
-        /** @var BSONDocument[] $arr */
-        foreach ($arr as $item) {
-            $log = new StateChangeLog(
-                $item->getDatabaseName(),
-                $item->getCollectionName(),
-                $item->getType());
+        /* @var $cursor Cursor */
+        $cursor = $collection->aggregate([
+            ['$match' => ['transaction_id' => $this->transactionId]],
+            [
+                '$project' => [
+                    'log' => [
+                        '$arrayElemAt' => ['$operation_logs', -1],
+                    ],
+                ],
+            ],
+        ]);
+        $arr    = $cursor->toArray();
+        $data   = reset($arr);
 
-            $log->setStateBefore($item->getStateBefore());
-            $log->setStateAfter($item->getStateAfter());
-            $logs[] = $log;
+        if (isset($data['log']) === false) {
+            return null;
         }
 
-        return $logs;
+        /* @var $log StateChangeLog */
+        $log = $data['log'];
+
+        if ($log) {
+            $collection->updateOne(
+                ['transaction_id' => $this->transactionId],
+                [
+                    '$push' => ['rollback_logs' => $log],
+                ]);
+
+            $collection->updateOne(
+                ['transaction_id' => $this->transactionId],
+                [
+                    '$pop' => ['operation_logs' => 1],
+                ]);
+        }
+
+        return $log;
     }
 }

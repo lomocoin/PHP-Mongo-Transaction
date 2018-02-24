@@ -19,7 +19,7 @@ class TransactionConfig
     /**
      * @var string
      */
-    private $transactionCollectionName;
+    private $transactionLogCollectionName;
 
     /**
      * @var string
@@ -31,30 +31,30 @@ class TransactionConfig
      *
      * @param Client $mongoDBClient
      * @param string $databaseName
-     * @param string $transactionCollectionName
+     * @param string $transactionLogCollectionName
      * @param string $stageChangeLogCollectionName
      */
     public function __construct(
         Client $mongoDBClient,
         string $databaseName,
-        string $transactionCollectionName,
+        string $transactionLogCollectionName,
         string $stageChangeLogCollectionName
-    )
-    {
+    ) {
         $this->mongoDBClient                = $mongoDBClient;
         $this->databaseName                 = $databaseName;
-        $this->transactionCollectionName    = $transactionCollectionName;
+        $this->transactionLogCollectionName = $transactionLogCollectionName;
         $this->stageChangeLogCollectionName = $stageChangeLogCollectionName;
     }
 
     /**
      * @return \MongoDB\Collection
      */
-    public function getTransactionCollection()
+    public function getTransactionLogCollection()
     {
         $client         = $this->getMongoDBClient();
         $databaseName   = $this->getDatabaseName();
-        $collectionName = $this->getTransactionCollectionName();
+        $collectionName = $this->getTransactionLogCollectionName();
+
         return $client->$databaseName->$collectionName;
     }
 
@@ -66,6 +66,7 @@ class TransactionConfig
         $client         = $this->getMongoDBClient();
         $databaseName   = $this->getDatabaseName();
         $collectionName = $this->getStageChangeLogCollectionName();
+
         return $client->$databaseName->$collectionName;
     }
 
@@ -88,9 +89,9 @@ class TransactionConfig
     /**
      * @return string
      */
-    public function getTransactionCollectionName(): string
+    public function getTransactionLogCollectionName(): string
     {
-        return $this->transactionCollectionName;
+        return $this->transactionLogCollectionName;
     }
 
     /**

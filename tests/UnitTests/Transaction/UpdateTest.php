@@ -9,6 +9,7 @@ use Lomocoin\Mongodb\Exception\CannotCommitException;
 use Lomocoin\Mongodb\Exception\CannotRollbackException;
 use Lomocoin\Mongodb\Tests\TestCase;
 use Lomocoin\Mongodb\Transaction\Transaction;
+use Lomocoin\Mongodb\Transaction\TransactionLog;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 
@@ -58,7 +59,7 @@ class UpdateTest extends TestCase
     protected function tearDown()
     {
         self::$config->getStageChangeLogCollection()->drop();
-        self::$config->getTransactionCollection()->drop();
+        self::$config->getTransactionLogCollection()->drop();
         parent::tearDown();
     }
 
@@ -95,10 +96,10 @@ class UpdateTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
-        $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
         $transaction->updateOne(
             self::$testCollection,
@@ -112,19 +113,19 @@ class UpdateTest extends TestCase
             ]);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
-        $this->assertEquals(Transaction::STATE_ONGOING, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_ONGOING, $transactionDocument['state']);
 
         /** @noinspection PhpUnhandledExceptionInspection */
         $transaction->commit();
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
-        $this->assertEquals(Transaction::STATE_COMMIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_COMMIT, $transactionDocument['state']);
 
         $this->expectException(CannotRollbackException::class);
         /** @noinspection PhpUnhandledExceptionInspection */
@@ -139,10 +140,10 @@ class UpdateTest extends TestCase
         $transaction = Transaction::begin(self::$config);
 
         $transactionDocument = self::$config
-            ->getTransactionCollection()
-            ->findOne(['_id' => $transaction->getObjectId()]);
+            ->getTransactionLogCollection()
+            ->findOne(['_id' => $transaction->getTransactionId()]);
 
-        $this->assertEquals(Transaction::STATE_INIT, $transactionDocument['state']);
+        $this->assertEquals(TransactionLog::STATE_INIT, $transactionDocument['state']);
 
         $transaction->updateOne(
             self::$testCollection,
