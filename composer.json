@@ -1,6 +1,6 @@
 {
-  "name"        : "PHP-Mongodb-Transaction",
-  "description" : "PHP-Mongodb-Transaction",
+  "name"        : "lomocoin/PHP-Mongo-Transaction",
+  "description" : "Provide simple transaction feature for Mongodb",
   "authors"     : [
     {
       "name" : "Shenghan Chen",
@@ -29,6 +29,7 @@
     }
   },
   "require"     : {
+    "php": ">=7.0",
     "mongodb/mongodb": "^1.2"
   },
   "require-dev" : {
