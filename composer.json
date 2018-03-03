@@ -1,5 +1,5 @@
 {
-  "name"        : "lomocoin/PHP-Mongo-Transaction",
+  "name"        : "lomocoin/php-mongo-transaction",
   "description" : "Provide simple transaction feature for Mongodb",
   "authors"     : [
     {
