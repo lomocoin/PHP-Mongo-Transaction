@@ -121,6 +121,9 @@ class Transaction
         /** @var BSONDocument $stateBefore */
         $log->setStateBefore($stateBefore);
 
+        // use _id to avoid issues when deploy mongo sharding
+        $filter = ['_id' => $stateBefore['_id']];
+
         // execute update operation
         $updateResult = $collection->updateOne($filter, $update, $options);
         $this->transactionLogRepo->markOngoing($this->transactionId);
@@ -156,6 +159,9 @@ class Transaction
         /** @var BSONDocument $stateBefore */
         $log->setStateBefore($stateBefore);
         $this->stateChangeLogRepo->save($log);
+
+        // use _id to avoid issues when deploy mongo sharding
+        $filter = ['_id' => $stateBefore['_id']];
 
         // execute delete operation
         $deleteResult = $collection->deleteOne($filter, $options);
