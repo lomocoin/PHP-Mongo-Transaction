@@ -47,22 +47,26 @@ class StateChangeLogRepository
         );
 
         if (empty($document)) {
-            $collection->insertOne(
+            $insertResult = $collection->insertOne(
                 [
                     'transaction_id' => $this->transactionId,
                     'operation_logs' => [],
                     'rollback_logs'  => [],
                 ]
             );
-        }
 
-        $result = $collection->updateOne([
-            'transaction_id' => $this->transactionId,
-        ], [
-            '$push' => [
-                'operation_logs' => $log,
-            ],
-        ]);
+            $_id = $insertResult->getInsertedId();
+        }
+        $_id = $_id ?? $document['_id'];
+
+        // use _id to avoid issues when deploy mongo sharding
+        $result = $collection->updateOne(
+            ['_id' => $_id],
+            [
+                '$push' => [
+                    'operation_logs' => $log,
+                ],
+            ]);
 
         return $result;
     }
@@ -100,14 +104,15 @@ class StateChangeLogRepository
         $log = $data['log'];
 
         if ($log) {
+            // use _id to avoid issues when deploy mongo sharding
             $collection->updateOne(
-                ['transaction_id' => $this->transactionId],
+                ['_id' => $data['_id']],
                 [
                     '$push' => ['rollback_logs' => $log],
                 ]);
 
             $collection->updateOne(
-                ['transaction_id' => $this->transactionId],
+                ['_id' => $data['_id']],
                 [
                     '$pop' => ['operation_logs' => 1],
                 ]);
