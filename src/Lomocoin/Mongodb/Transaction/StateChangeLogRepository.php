@@ -46,7 +46,6 @@ class StateChangeLogRepository
             ['transaction_id' => $this->transactionId]
         );
 
-        $_id = null;
         if (empty($document)) {
             $insertResult = $collection->insertOne(
                 [
@@ -57,9 +56,8 @@ class StateChangeLogRepository
             );
 
             $_id = $insertResult->getInsertedId();
-        } else {
-            $_id = $document['_id'];
         }
+        $_id = $_id ?? $document['_id'];
 
         // use _id to avoid issues when deploy mongo sharding
         $result = $collection->updateOne(
