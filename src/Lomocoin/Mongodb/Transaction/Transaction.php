@@ -31,6 +31,9 @@ class Transaction
      */
     private $transactionLogRepo;
 
+    /* @var $_instance self */
+    private static $_instance = null;
+
     private function __construct(ObjectId $uuid, TransactionConfig $config)
     {
         $this->transactionId      = $uuid;
@@ -54,7 +57,11 @@ class Transaction
         $transactionLog     = $transactionLogRepo->create();
         $id                 = $transactionLog->getId();
 
-        return new self($id, $config);
+        if (self::$_instance === null) {
+            self::$_instance = new self($id, $config);
+        }
+
+        return self::$_instance;
     }
 
     /**
