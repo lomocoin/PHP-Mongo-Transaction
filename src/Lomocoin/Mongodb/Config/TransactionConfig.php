@@ -101,4 +101,12 @@ class TransactionConfig
     {
         return $this->stageChangeLogCollectionName;
     }
+
+    /**
+     * @return \MongoDB\Database
+     */
+    public function getMongoDatabase()
+    {
+        return $this->mongoDBClient->{$this->databaseName};
+    }
 }
