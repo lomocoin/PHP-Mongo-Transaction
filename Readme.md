@@ -43,7 +43,7 @@ You can use `Persistable` class with this library, but do not do any magic in th
 ## Install
 
 ```bash
-composer require PHP-Mongodb-Transaction
+composer require lomocoin/php-mongo-transaction
 ```
 
 ## Usage
@@ -58,12 +58,17 @@ require __DIR__ . '/vendor/autoload.php';
 ### 2. Create transaction object
 
 ```php
-$config = new \PHP_Mongo_Transaction\TransactionConfig(
-    new \MongoDB\Client(),
-    'test',
-    'transaction_log',
-    'state_change_log');
-    
+use Lomocoin\Mongodb\Config\TransactionConfig;
+use Lomocoin\Mongodb\Transaction\Transaction;
+use MongoDB\Client;
+
+$dbName = 'lomocoin_mongodb_test';
+$config = new TransactionConfig(
+    new Client(),
+    $dbName,
+    'lomocoin_mongodb_test_transaction_log',
+    'lomocoin_mongodb_test_transaction_state_change_log');
+
 $transaction = Transaction::begin($config);
 ```
 
@@ -72,6 +77,8 @@ $transaction = Transaction::begin($config);
 #### 3.1 insert
 
 ```php
+$collection = $config->getMongoDBClient()->$dbName->testCollection;
+
 $transaction->insertOne($collection, [
     'username' => 'B',
     'email'    => 'b@example.com',
@@ -94,7 +101,7 @@ $transaction->updateOne($collection, [
 #### 3.3 delete
 
 ```php
-$transaction->deleteOne(collection, ['username' => 'B']);
+$transaction->deleteOne($collection, ['username' => 'B']);
 ```
 
 ### 4. Commit or Rollback
